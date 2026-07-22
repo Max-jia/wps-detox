@@ -10,7 +10,21 @@ import threading
 import webbrowser
 import tkinter as tk
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# PyInstaller 打包後路徑處理
+if getattr(sys, 'frozen', False):
+    # 打包後：engine 跟 ui 都在同一個目錄
+    bundle_dir = os.path.dirname(sys.executable) if sys.platform == 'win32' else os.path.join(os.path.dirname(sys.executable), '..', 'Resources')
+    # 嘗試幾個可能的位置
+    for d in [bundle_dir, os.path.dirname(sys.executable), sys._MEIPASS]:
+        engine_path = os.path.join(d, 'engine')
+        if os.path.exists(engine_path):
+            sys.path.insert(0, d)
+            break
+    else:
+        sys.path.insert(0, sys._MEIPASS)
+else:
+    # 開發模式：ui/app.py → wps-detox/
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     import customtkinter as ctk
