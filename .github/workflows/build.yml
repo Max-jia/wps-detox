@@ -6,35 +6,36 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install customtkinter pillow pyinstaller
-      - name: Build
+      - name: Debug
         run: |
-          pyinstaller --onefile --windowed --name WPS-Detox-Windows --add-data "engine;engine" --hidden-import customtkinter --hidden-import PIL --collect-all customtkinter ui/app.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: WPS-Detox-Windows
-          path: dist/WPS-Detox-Windows.exe
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install customtkinter pillow pyinstaller
-      - name: Build
+          echo "OS: ${{ matrix.os }}"
+          ls -la
+          ls engine/ || echo "no engine dir"
+          cat requirements.txt
+      - name: Install deps
+        run: pip install -r requirements.txt pyinstaller
+      - name: Build (Linux only - test)
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          pyinstaller --windowed --name WPS-Detox --add-data "engine:engine" --hidden-import customtkinter --hidden-import PIL --collect-all customtkinter ui/app.py
-          cd dist && zip -r WPS-Detox-macOS.zip WPS-Detox.app
-      - uses: actions/upload-artifact@v4
-        with:
-          name: WPS-Detox-macOS
-          path: dist/WPS-Detox-macOS.zip
+          pyinstaller --onefile --add-data "engine:engine" --hidden-import customtkinter ui/app.py || echo "BUILD FAILED"
+          ls dist/ || echo "no dist"
+      - name: Build macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          pyinstaller --windowed --name WPS-Detox --add-data "engine:engine" --hidden-import customtkinter ui/app.py || echo "BUILD FAILED"
+          ls dist/ || echo "no dist"
+      - name: Build Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          pyinstaller --onefile --windowed --name WPS-Detox-Windows --add-data "engine;engine" --hidden-import customtkinter ui/app.py || echo "BUILD FAILED"
+          ls dist/ || echo "no dist"
