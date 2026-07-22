@@ -14,12 +14,13 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install customtkinter pillow pyinstaller
-      - name: Build
-        run: pyinstaller --onefile --windowed --name WPS-Detox --add-data "engine;engine" --hidden-import customtkinter ui/app.py
+      - name: Build exe
+        run: pyinstaller --onefile --windowed --name WPS-Detox-Windows --hidden-import customtkinter --hidden-import PIL --hidden-import PIL._tkinter_finder --collect-all customtkinter ui/app.py
+        shell: bash
       - uses: actions/upload-artifact@v4
         with:
           name: WPS-Detox-Windows
-          path: dist/WPS-Detox.exe
+          path: dist/WPS-Detox-Windows.exe
 
   build-macos:
     runs-on: macos-latest
@@ -29,9 +30,11 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install customtkinter pillow pyinstaller
-      - name: Build
-        run: pyinstaller --onefile --windowed --name WPS-Detox --add-data "engine:engine" --hidden-import customtkinter ui/app.py
+      - name: Build app
+        run: |
+          pyinstaller --windowed --name WPS-Detox --hidden-import customtkinter --hidden-import PIL --collect-all customtkinter ui/app.py
+          cd dist && zip -r WPS-Detox-macOS.zip WPS-Detox.app
       - uses: actions/upload-artifact@v4
         with:
           name: WPS-Detox-macOS
-          path: dist/WPS-Detox.app
+          path: dist/WPS-Detox-macOS.zip
