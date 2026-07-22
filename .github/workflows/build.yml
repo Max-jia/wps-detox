@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt pyinstaller
+      - run: pyinstaller --onefile --windowed --name "WPS-Detox" --add-data "engine;engine" --hidden-import customtkinter ui/app.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WPS-Detox-Windows
+          path: dist/WPS-Detox.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt pyinstaller
+      - run: pyinstaller --onefile --windowed --name "WPS-Detox" --add-data "engine:engine" --hidden-import customtkinter ui/app.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WPS-Detox-macOS
+          path: dist/WPS-Detox.app
